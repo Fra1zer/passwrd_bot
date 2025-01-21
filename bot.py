@@ -33,16 +33,23 @@ async def help_message(message: types.Message) -> None:
 async def generate_message(message: types.Message, state: FSMContext) -> None:
     await state.set_state(Password.gen_passwrd)
     await bot.send_message(chat_id = message.chat.id,
-                           text = 'Напишите длину пароля: ')
+                           text = 'Напишите длину пароля(от 8 до 120 символов): ')
 
 
-@dp.message(StateFilter(Password.gen_passwrd))
+@dp.message(StateFilter(Password.gen_passwrd), lambda x: x.text.isdigit() and 8 <= int(x.text) <= 120)
 async def process_gen(message: types.Message, state: FSMContext):
     await state.update_data(name = message.text)
     password = generate_password(int(message.text))
     await bot.send_message(chat_id = message.chat.id,
                            text = f'Сгенерированный пароль: {password}')
     await state.clear()
+
+@dp.message(StateFilter(Password.gen_passwrd))
+async def warning_not_age(message: types.Message):
+    await message.answer(
+        text='Введите число от 8 до 120\n'
+             'Попробуйте еще раз'
+    )
 
 
 async def main() -> None:
