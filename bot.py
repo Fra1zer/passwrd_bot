@@ -6,6 +6,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 import asyncio
 from config import TOKEN
 from generate_passwrd import generate_password, generate_pincode
+from database import *
 
 
 bot = Bot(token = TOKEN)
@@ -27,12 +28,16 @@ async def start_message(message: types.Message) -> None:
                            text = 'Привет, это бот для создания паролей, напишу команду /help, чтобы узнать '
                                   'о возможностях бота.\n'
                                   'Если нужно связать с разработчиком, можешь написать ему - @fra1zer0')
+    user_id = message.from_user.id
+    add_user(user_id)
 
 
 @dp.message(Command('help'), StateFilter(default_state))
 async def help_message(message: types.Message) -> None:
     await bot.send_message(chat_id = message.chat.id,
-                           text = 'Доступные команды бота: /gen_pass, /gen_pin')
+                           text = 'Доступные команды бота:\n'
+                                  '/gen_pass - генерация пароля\n'
+                                  '/gen_pin - генерация пинкода')
 
 
 @dp.message(Command('gen_pass'), StateFilter(default_state))
@@ -48,6 +53,8 @@ async def process_gen_pass(message: types.Message, state: FSMContext):
     password = generate_password(int(message.text))
     await bot.send_message(chat_id = message.chat.id,
                            text = f'Сгенерированный пароль: {password}')
+    user_id = message.from_user.id
+    update_count(user_id)
     await state.clear()
 
 
@@ -70,6 +77,8 @@ async def process_gen_pin(message: types.Message, state: FSMContext):
     pin = generate_pincode(int(message.text))
     await bot.send_message(chat_id = message.chat.id,
                            text = f'Сгенерированный пинкод: {pin}')
+    user_id = message.from_user.id
+    update_count(user_id)
     await state.clear()
 
 
@@ -89,4 +98,5 @@ async def main() -> None:
 
 
 if __name__ == '__main__':
+    create_table()
     asyncio.run(main())
