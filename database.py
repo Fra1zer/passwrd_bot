@@ -38,6 +38,7 @@ def user_exists(user_id):
     finally:
         conn.close()
 
+
 def add_user(user_id):
     user_id = str(user_id)
     if user_exists(user_id):
@@ -69,3 +70,22 @@ def update_count(user_id):
     conn.commit()
     cur.close()
     conn.close()
+
+
+def get_count(user_id):
+    user_id = str(user_id)
+    if not user_exists(user_id):
+        add_user(user_id)
+    conn = connect_to_db()
+
+    with conn.cursor() as cur:
+        cur.execute('''
+        SELECT count_pass
+        FROM users
+        WHERE id = %s;
+        ''', (user_id, ))
+        result = cur.fetchone()[0]
+    conn.commit()
+    cur.close()
+    conn.close()
+    return result

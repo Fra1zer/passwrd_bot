@@ -25,9 +25,9 @@ class Pin(StatesGroup):
 @dp.message(Command('start'), StateFilter(default_state))
 async def start_message(message: types.Message) -> None:
     await bot.send_message(chat_id = message.chat.id,
-                           text = 'Привет, это бот для создания паролей, напишу команду /help, чтобы узнать '
+                           text = 'Привет, это бот для создания паролей, напишите команду /help, чтобы узнать '
                                   'о возможностях бота.\n'
-                                  'Если нужно связать с разработчиком, можешь написать ему - @fra1zer0')
+                                  'Если нужно связать с разработчиком, можете написать ему - @fra1zer0')
     user_id = message.from_user.id
     add_user(user_id)
 
@@ -37,7 +37,8 @@ async def help_message(message: types.Message) -> None:
     await bot.send_message(chat_id = message.chat.id,
                            text = 'Доступные команды бота:\n'
                                   '/gen_pass - генерация пароля\n'
-                                  '/gen_pin - генерация пинкода')
+                                  '/gen_pin - генерация пин-кода\n'
+                                  '/get_count - количество сгенерированных паролей/пинкодов')
 
 
 @dp.message(Command('gen_pass'), StateFilter(default_state))
@@ -68,7 +69,7 @@ async def warning_pass(message: types.Message):
 async def generate_pin(message: types.Message, state: FSMContext):
     await state.set_state(Pin.gen_pin)
     await bot.send_message(chat_id = message.chat.id,
-                           text = 'Напишите длину пинкода(от 4 до 16 символов)')
+                           text = 'Напишите длину пин-кода(от 4 до 16 символов)')
 
 
 @dp.message(StateFilter(Pin.gen_pin), lambda x: x.text.isdigit() and 4 <= int(x.text) <= 16)
@@ -76,7 +77,7 @@ async def process_gen_pin(message: types.Message, state: FSMContext):
     await state.update_data(gen_pin = message.text)
     pin = generate_pincode(int(message.text))
     await bot.send_message(chat_id = message.chat.id,
-                           text = f'Сгенерированный пинкод: {pin}')
+                           text = f'Сгенерированный пин-код: {pin}')
     user_id = message.from_user.id
     update_count(user_id)
     await state.clear()
@@ -86,6 +87,14 @@ async def process_gen_pin(message: types.Message, state: FSMContext):
 async def warning_pin(message: types.Message):
     await message.answer(text = 'Введите число от 4 до 16\n'
                                 'Попробуйте ещё раз')
+
+
+@dp.message(Command('get_count'))
+async def take_count(message: types.Message):
+    user_id = message.from_user.id
+    count = get_count(user_id)
+    await bot.send_message(chat_id=message.chat.id,
+                           text = f'Количество сгенерированных паролей/пин-кодов: {count}')
 
 
 @dp.message()
